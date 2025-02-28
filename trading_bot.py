@@ -1,130 +1,46 @@
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters
-import yfinance as yf
-from datetime import datetime
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
-# Функция для получения прогноза с помощью yfinance
-def get_prediction(currency_pair):
-    # Формируем тикер для валютной пары (например, для EURUSD)
-    pair = yf.Ticker(f"{currency_pair}=X")
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    # Получаем последние 5 минутных данных
-    data = pair.history(period="1d", interval="5m")
-
-    if data.empty:
-        return "Ошибка получения данных. Попробуйте позже."
-
-    # Извлекаем последнюю цену
-    latest_data = data.iloc[-1]
-    latest_price = latest_data['Close']
-    open_price = latest_data['Open']
-    high_price = latest_data['High']
-    low_price = latest_data['Low']
-
-    # Сравниваем текущую цену с предыдущей для определения тренда
-    prev_data = data.iloc[-2]
-    prev_price = prev_data['Close']
-
-    # Определяем тренд
-    trend = "Вверх" if latest_price > prev_price else "Вниз"
-
-    # Получаем текущее время
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    # Формируем подробный ответ
-    result = f"""
-    *Прогноз для {currency_pair}:*
-
-    📅 *Дата и время прогноза:* {current_time}
-    💵 *Текущая цена:* {latest_price} USD
-    🔴 *Открытие:* {open_price} USD
-    🔼 *Максимум:* {high_price} USD
-    🔽 *Минимум:* {low_price} USD
-
-    📊 *Тренд:* {trend}
-
-    *Обновление данных:* Данные обновляются каждые 5 минут.
-    """
-    return result
-
-# Функция для создания клавиатуры с валютными парами
-def create_currency_keyboard():
-    # Список валютных пар для отображения
-    currency_pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CHF']
-
-    # Разбиваем валютные пары на компактные строки для удобства
+# Обработчики команд
+async def start(update: Update, context):
+    logger.info("Команда /start от пользователя %s", update.message.from_user.id)
+    # Кнопки для выбора
     keyboard = [
-        ['EUR/USD', 'GBP/USD'],
-        ['USD/JPY', 'AUD/USD'],
-        ['USD/CHF', 'USD/CAD'],
-        ['Назад']  # Добавляем кнопку назад
+        [InlineKeyboardButton("ACTIVE FIN", callback_data='ACTIVE_FIN')],
+        [InlineKeyboardButton("ACTIVE OTC", callback_data='ACTIVE_OTC')]
     ]
-    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text('Привет! Я бот. Выберите действие:', reply_markup=reply_markup)
 
-# Функция для создания клавиатуры с основными опциями
-def create_main_keyboard():
-    keyboard = [
-        ['ACTIVE FIN', 'ACTIVE OTC'],
-        ['Сброс']  # Добавляем кнопку сброс
-    ]
-    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+async def active_fin(update: Update, context):
+    logger.info("Пользователь выбрал ACTIVE FIN: %s", update.message.from_user.id)
+    await update.message.reply_text('Вы выбрали ACTIVE FIN.')
 
-# Функция для создания клавиатуры с кнопкой "Назад" (для прогноза)
-def create_back_keyboard():
-    keyboard = [
-        ['Назад']
-    ]
-    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+async def active_otc(update: Update, context):
+    logger.info("Пользователь выбрал ACTIVE OTC: %s", update.message.from_user.id)
+    await update.message.reply_text('Вы выбрали ACTIVE OTC.')
 
-# Функция, которая будет запускаться при команде /start
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "Привет! Выберите одну из опций:",
-        reply_markup=create_main_keyboard()
-    )
+async def forecast(update: Update, context):
+    logger.info("Пользователь выбрал валютную пару: %s", update.message.text)
+    await update.message.reply_text('Вы выбрали валютную пару.')
 
-# Функция для выбора ACTIVE FIN
-async def active_fin(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "Выберите валютную пару:",
-        reply_markup=create_currency_keyboard()
-    )
+async def reset(update: Update, context):
+    logger.info("Пользователь выбрал Сброс: %s", update.message.from_user.id)
+    await update.message.reply_text('Сброс. Возвращаемся в главное меню.')
 
-# Функция для выбора ACTIVE OTC
-async def active_otc(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "ACTIVE OTC пока не поддерживается.",
-        reply_markup=create_main_keyboard()
-    )
-
-# Функция для прогноза
-async def forecast(update: Update, context: CallbackContext):
-    # Получаем выбранную валютную пару
-    currency_pair = update.message.text.strip()
-
-    # Если пользователь выбрал кнопку "Назад", возвращаем в меню валютных пар
-    if currency_pair == "Назад":
-        await active_fin(update, context)
-        return
-
-    # Получаем прогноз для валютной пары
-    prediction = get_prediction(currency_pair.replace('/', ''))
-
-    # Отправляем результат пользователю
-    await update.message.reply_text(prediction, parse_mode='Markdown')
-
-    # Отправляем кнопку "Назад"
-    await update.message.reply_text(
-        "Если хотите вернуться назад, нажмите 'Назад'.",
-        reply_markup=create_back_keyboard()
-    )
-
-# Функция для сброса и возврата в главное меню
-async def reset(update: Update, context: CallbackContext):
-    await update.message.reply_text(
-        "Вы вернулись в главное меню.",
-        reply_markup=create_main_keyboard()
-    )
+# Обработчик кнопок
+async def button(update: Update, context):
+    query = update.callback_query
+    await query.answer()  # Подтверждаем нажатие кнопки
+    if query.data == 'ACTIVE_FIN':
+        await query.edit_message_text(text="Вы выбрали ACTIVE FIN.")
+    elif query.data == 'ACTIVE_OTC':
+        await query.edit_message_text(text="Вы выбрали ACTIVE OTC.")
 
 # Основная функция для запуска бота
 def main():
@@ -142,19 +58,14 @@ def main():
     # Обработчик для кнопки "Сброс"
     application.add_handler(MessageHandler(filters.Regex('^Сброс$'), reset))  # Возвращает в главное меню
 
+    # Обработка callback запросов от кнопок (используем CallbackQueryHandler)
+    application.add_handler(CallbackQueryHandler(button))
+
     # Запуск бота
+    logger.info("Запуск бота...")
     application.run_polling()
+    logger.info("Бот работает.")
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
 
