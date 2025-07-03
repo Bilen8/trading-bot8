@@ -58,7 +58,7 @@ QUOTES = [
     "💬 “Chasing the market is like chasing wind. Let it come to you.”\n— Trading Wisdom",
 ]
 
-def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: CallbackContext):
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
         [InlineKeyboardButton("📊 Results", callback_data='results')],
@@ -67,20 +67,21 @@ def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     chat_id = update.effective_chat.id
+    # Отправляем картинку с подписью — await обязательно
     await context.bot.send_photo(
-    chat_id=chat_id,
-    photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
-    caption=(
-        "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
-        "Here you’ll find:\n\n"
-        "🔹 Daily trading quotes\n"
-        "🔹 Live trading session results\n"
-        "🔹 Top platforms to start trading\n"
-        "🔹 Access to the VIP group\n\n"
-        "Let’s take your trading to the next level. 🏁"
-    ),
-    reply_markup=reply_markup
-)
+        chat_id=chat_id,
+        photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
+        caption=(
+            "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
+            "Here you’ll find:\n\n"
+            "🔹 Daily trading quotes\n"
+            "🔹 Live trading session results\n"
+            "🔹 Top platforms to start trading\n"
+            "🔹 Access to the VIP group\n\n"
+            "Let’s take your trading to the next level. 🏁"
+        ),
+        reply_markup=reply_markup
+    )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
