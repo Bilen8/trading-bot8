@@ -71,14 +71,15 @@ RESULT_IMAGES = [
     "https://i.ibb.co/S4D2YNX6/photo-2025-07-02-00-26-30.jpg"
 ]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def main_menu_keyboard():
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
         [InlineKeyboardButton("📊 Results", callback_data='results')],
         [InlineKeyboardButton("💎 Join VIP", callback_data='join_vip')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(keyboard)
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     caption_text = (
         "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
         "Here you’ll find:\n\n"
@@ -88,12 +89,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🔹 Access to the VIP group\n\n"
         "Let’s take your trading to the next level. 🏁"
     )
-
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
         caption=caption_text,
-        reply_markup=reply_markup
+        reply_markup=main_menu_keyboard()
     )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -103,11 +103,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data in ['daily_quotes', 'next_quote']:
         quote = random.choice(QUOTES)
-        keyboard = [
+        keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
             [InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]
-        ]
-        await query.edit_message_text(text=quote, reply_markup=InlineKeyboardMarkup(keyboard))
+        ])
+        await query.edit_message_text(text=quote, reply_markup=keyboard)
 
     elif data == 'results':
         media_group = [InputMediaPhoto(media=url) for url in RESULT_IMAGES]
@@ -121,9 +121,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 All trades are real and taken live in the VIP group.\n"
             "🔁 Come back daily to stay updated!"
         )
-
-        keyboard = [[InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]]
-        await context.bot.send_message(chat_id=query.message.chat.id, text=results_text, reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]])
+        await context.bot.send_message(chat_id=query.message.chat.id, text=results_text, reply_markup=keyboard)
 
     elif data == 'join_vip':
         vip_text = (
@@ -151,7 +150,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text=vip_text, reply_markup=keyboard, parse_mode='Markdown')
 
     elif data == 'main_menu':
-        await start(update, context)
+        # Вместо вызова start() — просто отредактируем сообщение на главное меню (без фото)
+        main_text = (
+            "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
+            "Here you’ll find:\n\n"
+            "🔹 Daily trading quotes\n"
+            "🔹 Live trading session results\n"
+            "🔹 Top platforms to start trading\n"
+            "🔹 Access to the VIP group\n\n"
+            "Let’s take your trading to the next level. 🏁"
+        )
+        await query.edit_message_text(text=main_text, reply_markup=main_menu_keyboard())
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
