@@ -94,6 +94,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         quote = random.choice(QUOTES)
         keyboard = [[InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
+        # Здесь используем edit_message_caption, если сообщение с фото, иначе edit_message_text
+        # Но в нашем случае после первого сообщения с фото можно редактировать текст, так что просто edit_message_text
         await query.edit_message_text(text=quote, reply_markup=reply_markup)
 
     elif data == 'results':
