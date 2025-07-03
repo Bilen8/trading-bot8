@@ -1,9 +1,14 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackContext
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    CallbackQueryHandler,
+    ContextTypes
+)
 
 TOKEN = "8175464094:AAGrcsWYvy-ORV6ZBDMngB1zbaL9AAEpCWg"
 
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
         [InlineKeyboardButton("📊 Results", callback_data='results')],
@@ -12,8 +17,8 @@ def start(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     chat_id = update.effective_chat.id
-    # Отправляем картинку с подписью
-    context.bot.send_photo(
+
+    await context.bot.send_photo(
         chat_id=chat_id,
         photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
         caption=(
@@ -29,7 +34,7 @@ def start(update: Update, context: CallbackContext):
         reply_markup=reply_markup
     )
 
-async def button_handler(update: Update, context: CallbackContext):
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
@@ -39,13 +44,16 @@ async def button_handler(update: Update, context: CallbackContext):
     elif data == 'results':
         await query.edit_message_text(text="📊 Here are the live trading session results!")
     elif data == 'join_vip':
-        await query.edit_message_text(text="💎 Join our VIP group here: [VIP Link](https://t.me/joinchat/example)", parse_mode='Markdown')
+        await query.edit_message_text(
+            text="💎 Join our VIP group here: [VIP Link](https://t.me/joinchat/example)",
+            parse_mode='Markdown'
+        )
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler('start', start))
-    app.add_handler(CallbackQueryHandler(...)(button_handler))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
     print("Bot started...")
     app.run_polling()
