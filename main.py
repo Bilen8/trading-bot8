@@ -58,7 +58,7 @@ QUOTES = [
     "💬 “Chasing the market is like chasing wind. Let it come to you.”\n— Trading Wisdom",
 ]
 
-async def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
         [InlineKeyboardButton("📊 Results", callback_data='results')],
