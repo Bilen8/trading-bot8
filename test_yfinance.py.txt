@@ -1,9 +1,1 @@
-import yfinance as yf
 
-ticker = "EURUSD=X"  # например, EUR/USD
-data = yf.download(ticker, period="1d", interval="1m")
-
-if data.empty:
-    print("Ошибка получения данных")
-else:
-    print(data)
