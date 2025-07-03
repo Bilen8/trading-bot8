@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 import random
 
@@ -58,7 +58,32 @@ QUOTES = [
     "💬 “Chasing the market is like chasing wind. Let it come to you.”\n— Trading Wisdom",
 ]
 
-# Команда /start
+RESULTS_IMAGES = [
+    "https://i.ibb.co/qFdWT612/photo-2025-07-02-00-26-23.jpg",
+    "https://i.ibb.co/1GVTLxgq/photo-2025-07-02-00-26-24.jpg",
+    "https://i.ibb.co/TDbGC6S4/photo-2025-07-02-00-26-25.jpg",
+    "https://i.ibb.co/0RDp4vVr/photo-2025-07-02-00-26-26.jpg",
+    "https://i.ibb.co/PsmLfx0N/photo-2025-07-02-00-26-27.jpg",
+    "https://i.ibb.co/BHdyf4wg/photo-2025-07-02-00-26-27-2.jpg",
+    "https://i.ibb.co/sJVHDPm4/photo-2025-07-02-00-26-28.jpg",
+    "https://i.ibb.co/k6JcttRp/photo-2025-07-02-00-26-29.jpg",
+    "https://i.ibb.co/bj6cBT5G/photo-2025-07-02-00-26-29-2.jpg",
+    "https://i.ibb.co/S4D2YNX6/photo-2025-07-02-00-26-30.jpg"
+]
+
+RESULTS_TEXT = (
+    "📊 SSFX Pro — Latest Trading Session Results: 📅 1 July 2025\n\n"
+    "Session 1\n"
+    "✅ +5 ITM +$480\n"
+    "❌ -0 OTM\n\n"
+    "Session 2\n"
+    "✅ +5 ITM +$512\n"
+    "❌ -0 OTM\n\n"
+    "Total: +$992 profit 💰\n\n"
+    "📌 All trades are real and taken live in the VIP group.\n"
+    "🔁 Come back daily to stay updated!"
+)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
@@ -67,6 +92,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
+    chat_id = update.effective_chat.id
     caption_text = (
         "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
         "Here you’ll find:\n\n"
@@ -77,46 +103,53 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Let’s take your trading to the next level. 🏁"
     )
 
-    # Отправка стартового фото и текста
     await context.bot.send_photo(
-        chat_id=update.effective_chat.id,
+        chat_id=chat_id,
         photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
         caption=caption_text,
         reply_markup=reply_markup
     )
 
-# Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
+    chat_id = query.message.chat.id
 
     if data in ['daily_quotes', 'next_quote']:
         quote = random.choice(QUOTES)
-        keyboard = [[InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')]]
+        keyboard = [
+            [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
+            [InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-
-        # Отправляем новое сообщение (не редактируем старое)
-        await context.bot.send_message(
-            chat_id=query.message.chat_id,
-            text=quote,
-            reply_markup=reply_markup
-        )
+        await query.edit_message_text(text=quote, reply_markup=reply_markup)
 
     elif data == 'results':
-        await query.edit_message_text(text="📊 Here are the live trading session results!")
+        # Отправка 10 скриншотов как медиа-группу
+        media = [InputMediaPhoto(url) for url in RESULTS_IMAGES]
+        await context.bot.send_media_group(chat_id=chat_id, media=media)
+
+        # Отправка текста с кнопкой "Main Menu"
+        keyboard = [[InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await context.bot.send_message(chat_id=chat_id, text=RESULTS_TEXT, reply_markup=reply_markup)
 
     elif data == 'join_vip':
         await query.edit_message_text(
             text="💎 Join our VIP group here: [VIP Link](https://t.me/joinchat/example)",
-            parse_mode='Markdown'
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]
+            ])
         )
+
+    elif data == 'main_menu':
+        await start(update, context)
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
-
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CallbackQueryHandler(button_handler))
-
     print("Bot started...")
     app.run_polling()
