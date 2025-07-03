@@ -45,7 +45,7 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler('start', start))
-    app.add_handler(telegram.ext.CallbackQueryHandler(button_handler))
+    app.add_handler(CallbackQueryHandler(...)(button_handler))
 
     print("Bot started...")
     app.run_polling()
