@@ -58,6 +58,7 @@ QUOTES = [
     "💬 “Chasing the market is like chasing wind. Let it come to you.”\n— Trading Wisdom",
 ]
 
+# Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
@@ -65,8 +66,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("💎 Join VIP", callback_data='join_vip')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
-    chat_id = update.effective_chat.id
 
     caption_text = (
         "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
@@ -78,13 +77,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Let’s take your trading to the next level. 🏁"
     )
 
+    # Отправка стартового фото и текста
     await context.bot.send_photo(
-        chat_id=chat_id,
+        chat_id=update.effective_chat.id,
         photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
         caption=caption_text,
         reply_markup=reply_markup
     )
 
+# Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -94,9 +95,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         quote = random.choice(QUOTES)
         keyboard = [[InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        # Здесь используем edit_message_caption, если сообщение с фото, иначе edit_message_text
-        # Но в нашем случае после первого сообщения с фото можно редактировать текст, так что просто edit_message_text
-        await query.edit_message_text(text=quote, reply_markup=reply_markup)
+
+        # Отправляем новое сообщение (не редактируем старое)
+        await context.bot.send_message(
+            chat_id=query.message.chat_id,
+            text=quote,
+            reply_markup=reply_markup
+        )
 
     elif data == 'results':
         await query.edit_message_text(text="📊 Here are the live trading session results!")
