@@ -95,9 +95,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data in ['daily_quotes', 'next_quote']:
         quote = random.choice(QUOTES)
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
-            [InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]
-        ])
+    [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
+    [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]  # изменено
+])
         await query.edit_message_text(text=quote, reply_markup=keyboard)
 
     elif data == 'results':
@@ -112,7 +112,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 All trades are real and taken live in the VIP group.\n"
             "🔁 Come back daily to stay updated!"
         )
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]])
+        keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]  # изменено
+])
         await context.bot.send_message(chat_id=query.message.chat.id, text=results_text, reply_markup=keyboard)
 
     elif data == 'join_vip':
