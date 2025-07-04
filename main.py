@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMe
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 import random
 
-TOKEN = "8175464094:AAGrcsWYvy-ORV6ZBDMngB1zbaL9AAEpCWg"
+TOKEN = "8175464094:AAELjRKRQjVgqoKpiX9FRjAhZ9orfqAt8W4"
 
 QUOTES = [
     "💬 “Risk comes from not knowing what you’re doing.”\n— Warren Buffett",
