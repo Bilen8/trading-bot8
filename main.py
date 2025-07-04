@@ -59,23 +59,90 @@ QUOTES = [
 ]
 
 RESULT_IMAGES = [
-    "https://i.ibb.co/qFdWT612/photo-2025-07-02-00-26-23.jpg",
-    # … все 10 ссылок
-    "https://i.ibb.co/S4D2YNX6/photo-2025-07-02-00-26-30.jpg"
+    # ... ссылки на скриншоты ...
 ]
 
-def main_menu_markup():
-    return InlineKeyboardMarkup([
+def main_menu_keyboard():
+    keyboard = [
         [InlineKeyboardButton("📡 Daily Quotes", callback_data='daily_quotes')],
         [InlineKeyboardButton("📊 Results", callback_data='results')],
         [InlineKeyboardButton("💎 Join VIP", callback_data='join_vip')]
-    ])
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    caption_text = (
+        "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
+        "Here you’ll find:\n\n"
+        "🔹 Daily trading quotes\n"
+        "🔹 Live trading session results\n"
+        "🔹 Top platforms to start trading\n"
+        "🔹 Access to the VIP group\n\n"
+        "Let’s take your trading to the next level. 🏁"
+    )
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo="https://i.ibb.co/Jjv62Vsy/Chat-GPT-Image-23-2025-23-54-01.png",
-        caption=(
+        caption=caption_text,
+        reply_markup=main_menu_keyboard()
+    )
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data in ['daily_quotes', 'next_quote']:
+        quote = random.choice(QUOTES)
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
+            [InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]
+        ])
+        await query.edit_message_text(text=quote, reply_markup=keyboard)
+
+    elif data == 'results':
+        media_group = [InputMediaPhoto(media=url) for url in RESULT_IMAGES]
+        await context.bot.send_media_group(chat_id=query.message.chat.id, media=media_group)
+
+        results_text = (
+            "📊 SSFX Pro — Latest Trading Session Results: 📅 1 July 2025\n\n"
+            "Session 1\n✅ +5 ITM +$480\n❌ -0 OTM\n\n"
+            "Session 2\n✅ +5 ITM +$512\n❌ -0 OTM\n\n"
+            "Total: +$992 profit 💰\n\n"
+            "📌 All trades are real and taken live in the VIP group.\n"
+            "🔁 Come back daily to stay updated!"
+        )
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Main Menu", callback_data='main_menu')]])
+        await context.bot.send_message(chat_id=query.message.chat.id, text=results_text, reply_markup=keyboard)
+
+    elif data == 'join_vip':
+        vip_text = (
+            "🚀 Ready to take your trading seriously?\n\n"
+            "These are the platforms I personally use and recommend:\n\n"
+            "🔹 PocketOption\n"
+            "🔹 Quotex\n\n"
+            "💵 To access VIP signals:\n"
+            "1️⃣ Register on a platform\n"
+            "2️⃣ Deposit a minimum of $100\n"
+            "3️⃣ Send me the message: *I deposited*\n\n"
+            "📩 I’ll give you access after confirmation.\n"
+            "📌 Use the Russia link if you're located in Russia.\n\n"
+            "💡 All VIP signals are sent for PocketOption."
+        )
+
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🌍 PocketOption", url="https://u3.shortink.io/register?utm_campaign=798227&utm_source=affiliate&utm_medium=sr&a=taJofjkusABird&ac=sstrategies&code=GRL069")],
+            [InlineKeyboardButton("🇷🇺 PocketOption Russia", url="https://po-ru4.click/register?utm_campaign=798227&utm_source=affiliate&utm_medium=sr&a=taJofjkusABird&ac=sstrategies&code=GRL069")],
+            [InlineKeyboardButton("🔸 Quotex", url="https://broker-qx.pro/sign-up/?lid=1045797")],
+            [InlineKeyboardButton("🧾 I Deposited", url="https://t.me/Signalsfxs")],
+            [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]
+        ])
+
+        await query.edit_message_text(text=vip_text, reply_markup=keyboard, parse_mode='Markdown')
+
+    elif data == 'main_menu':
+        # Вместо вызова start() — просто отредактируем сообщение на главное меню (без фото)
+        main_text = (
             "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
             "Here you’ll find:\n\n"
             "🔹 Daily trading quotes\n"
@@ -83,86 +150,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🔹 Top platforms to start trading\n"
             "🔹 Access to the VIP group\n\n"
             "Let’s take your trading to the next level. 🏁"
-        ),
-        reply_markup=main_menu_markup()
-    )
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-    chat_id = query.message.chat.id
-
-    if data in ['daily_quotes', 'next_quote']:
-        quote = random.choice(QUOTES)
-        await query.edit_message_text(
-            text=quote,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔁 Next Quote", callback_data='next_quote')],
-                [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]
-            ])
         )
-
-    elif data == 'results':
-        media = [InputMediaPhoto(url) for url in RESULT_IMAGES]
-        await context.bot.send_media_group(chat_id=chat_id, media=media)
-
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=(
-                "📊 SSFX Pro — Latest Trading Session Results: 📅 1 July 2025\n\n"
-                "Session 1\n✅ +5 ITM +$480\n❌ -0 OTM\n\n"
-                "Session 2\n✅ +5 ITM +$512\n❌ -0 OTM\n\n"
-                "Total: +$992 profit 💰\n\n"
-                "📌 All trades are real and taken live in the VIP group.\n"
-                "🔁 Come back daily to stay updated!"
-            ),
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]
-            ])
-        )
-
-    elif data == 'join_vip':
-        await query.edit_message_text(
-            text=(
-                "🚀 Ready to take your trading seriously?\n\n"
-                "These are the platforms I personally use and recommend:\n\n"
-                "🔹 PocketOption\n🔹 Quotex\n\n"
-                "💵 To access VIP signals:\n"
-                "1️⃣ Register on a platform\n"
-                "2️⃣ Deposit a minimum of $100\n"
-                "3️⃣ Send me the message: *I deposited*\n\n"
-                "📩 I’ll give you access after confirmation.\n"
-                "📌 Use the Russia link if you're located in Russia.\n"
-                "💡 All VIP signals are sent for PocketOption."
-            ),
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🌍 PocketOption", url="https://u3.shortink.io/register?…")],
-                [InlineKeyboardButton("🇷🇺 PocketOption Russia", url="https://po-ru4.click/register?…")],
-                [InlineKeyboardButton("🔸 Quotex", url="https://broker-qx.pro/sign-up/?lid=1045797")],
-                [InlineKeyboardButton("🧾 I Deposited", url="https://t.me/Signalsfxs")],
-                [InlineKeyboardButton("⬅️ Back to Menu", callback_data='main_menu')]
-            ]),
-            parse_mode='Markdown'
-        )
-
-    elif data == 'main_menu':
-        await query.edit_message_caption(
-            caption=(
-                "Welcome to SSFX Bot — your access point to daily signals, results, and elite trading motivation.\n\n"
-                "Here you’ll find:\n\n"
-                "🔹 Daily trading quotes\n"
-                "🔹 Live trading session results\n"
-                "🔹 Top platforms to start trading\n"
-                "🔹 Access to the VIP group\n\n"
-                "Let’s take your trading to the next level. 🏁"
-            ),
-            reply_markup=main_menu_markup()
-        )
+        await query.edit_message_text(text=main_text, reply_markup=main_menu_keyboard())
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CallbackQueryHandler(button_handler))
+
     print("Bot started...")
     app.run_polling()
